@@ -26,7 +26,7 @@ public class BlockBlocker
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
         // Register ourselves for server and other game events we are interested in
-        MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new ClientModEvents());
 
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
@@ -52,10 +52,7 @@ public class BlockBlocker
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
-        /*
-        // Do something when the server starts
         LOGGER.info("HELLO from server starting");
-        */
     }
 
 }

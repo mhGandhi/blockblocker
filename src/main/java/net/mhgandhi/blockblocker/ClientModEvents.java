@@ -23,7 +23,6 @@ public class ClientModEvents {
     public void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         if (event.getEntity() instanceof Player player) {
             if (event.getPlacedBlock().getBlock() == Blocks.SAND) {
-                BlockBlocker.LOGGER.info("SAND PLACED");
                 event.setCanceled(true);
             }
         }
