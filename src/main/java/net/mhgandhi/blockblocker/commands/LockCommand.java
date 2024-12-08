@@ -1,8 +1,11 @@
 package net.mhgandhi.blockblocker.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.sun.jdi.connect.Connector;
+import net.mhgandhi.blockblocker.BlockBlocker;
 import net.mhgandhi.blockblocker.LockedBlockManager;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -18,6 +21,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.io.PrintStream;
 import java.util.List;
 
 public class LockCommand {
@@ -26,80 +30,63 @@ public class LockCommand {
                 Commands.literal("blockblocker")
                         .then(Commands.literal("lock")
                                 .then(Commands.argument("block", BlockStateArgument.block(buildContext))
-                                        .then(Commands.argument("target", EntityArgument.player()))
                                         .executes(this::lockBlock)))
                         .then(Commands.literal("unlock")
                                 .then(Commands.argument("block", BlockStateArgument.block(buildContext))
-                                        .then(Commands.argument("target", EntityArgument.player()))
                                         .executes(this::unlockBlock)))
                         .then(Commands.literal("list")
-                                .then(Commands.argument("target", EntityArgument.player()))
                                 .executes(this::listLockedBlocks))
         );
     }
 
     private int listLockedBlocks(CommandContext<CommandSourceStack> pContext) {
         CommandSourceStack source = pContext.getSource();
-        Entity target;
-        try {
-            target = EntityArgument.getEntity(pContext,"target");
-        } catch (CommandSyntaxException e) {
-            target = source.getEntity();
-        }
+        Player player = extractPlayerTarget(pContext);
+        if(player==null)return 0;
 
-        if (target instanceof Player player) {
-            List<Tag> blocks = LockedBlockManager.getLocked(player);
-
-            if (blocks.isEmpty()) {
-                source.sendSuccess(()->Component.literal("Your restricted list is empty."), true);
-            } else {
-                source.sendSuccess(()->Component.literal("Restricted blocks: " + blocks), true);
-            }
-            return 1; // Success
+        List<Tag> blocks = LockedBlockManager.getLocked(player);
+        if (blocks.isEmpty()) {
+            source.sendSuccess(()->Component.literal("No locked blocks"), true);
         } else {
-            source.sendFailure(Component.literal("This command can only be used on players."));
-            return 0; // Failure
+            source.sendSuccess(()->Component.literal(""+blocks), true);
         }
+        return 1; // Success
     }
 
     private int unlockBlock(CommandContext<CommandSourceStack> pContext) {
         Block block = BlockStateArgument.getBlock(pContext, "block").getState().getBlock();
         CommandSourceStack source = pContext.getSource();
-        Entity target;
-        try {
-            target = EntityArgument.getEntity(pContext,"target");
-        } catch (CommandSyntaxException e) {
-            target = source.getEntity();
-        }
+        Player player = extractPlayerTarget(pContext);
+        if(player == null)return 0;
 
-        if (target instanceof Player player) {
-            LockedBlockManager.removeBlockedBlock(player, block);
-            source.sendSuccess(()->Component.literal("Removed block from your restricted list: " + block.getName().getString()), true);
-            return 1; // Success
-        } else {
-            source.sendFailure(Component.literal("This command can only be used on players."));
-            return 0; // Failure
+        if(!LockedBlockManager.removeBlockedBlock(player, block)){
+            source.sendFailure(Component.literal(block.getName().getString()+ " is not locked"));
+            return 0;
         }
+        source.sendSuccess(()->Component.literal("Unlocked Block: " + block.getName().getString()), true);
+        return 1; // Success
     }
 
     private int lockBlock(CommandContext<CommandSourceStack> pContext) {
         Block block = BlockStateArgument.getBlock(pContext, "block").getState().getBlock();
         CommandSourceStack source = pContext.getSource();
-        Entity target;
-        try {
-            target = EntityArgument.getEntity(pContext,"target");
-        } catch (CommandSyntaxException e) {
-            target = source.getEntity();
+        Player player = extractPlayerTarget(pContext);
+        if(player==null)return 0;
+
+        if(!LockedBlockManager.addBlockedBlock(player, block)){
+            source.sendFailure(Component.literal(block.getName().getString()+ " is already locked"));
+            return 0;
         }
+        source.sendSuccess(()->Component.literal("Locked Block: " + block.getName().getString()), true);
+        return 1; // Success
+    }
 
-
-        if (target instanceof Player player) {
-            LockedBlockManager.addBlockedBlock(player, block);
-            source.sendSuccess(()->Component.literal("Added block to your restricted list: " + block.getName().getString()), true);
-            return 1; // Success
-        } else {
-            source.sendFailure(Component.literal("This command can only be used on players."));
-            return 0; // Failure
+    private static Player extractPlayerTarget(CommandContext<CommandSourceStack> pContext){
+        if(pContext.getSource().getEntity() instanceof Player p){
+            return p;
+        }else{
+            pContext.getSource().sendFailure(Component.literal("This command can only be used on players."));
+            return null;
         }
     }
 

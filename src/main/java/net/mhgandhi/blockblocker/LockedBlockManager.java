@@ -1,6 +1,5 @@
 package net.mhgandhi.blockblocker;
 
-import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -9,7 +8,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 
-import java.util.LinkedList;
 import java.util.List;
 
 public class LockedBlockManager {
@@ -17,8 +15,11 @@ public class LockedBlockManager {
 
     /**
      * Adds a block to the player's restricted collection.
+     *
+     * @return
      */
-    public static void addBlockedBlock(Player player, Block block) {
+    public static boolean addBlockedBlock(Player player, Block block) {
+        boolean unlockedBefore = !isBlocked(player,block);
         CompoundTag persistentData = player.getPersistentData();
         ListTag blockedList = persistentData.getList(BLOCKED_BOCKS_COLLECTION_NBT_KEY, Tag.TAG_STRING);
 
@@ -29,12 +30,14 @@ public class LockedBlockManager {
             persistentData.put(BLOCKED_BOCKS_COLLECTION_NBT_KEY, blockedList);
             BlockBlocker.LOGGER.info("Added blocked block: " + blockKey + " for player " + player.getName().getString());
         }
+        return unlockedBefore;
     }
 
     /**
      * Removes a block from the player's restricted collection.
      */
-    public static void removeBlockedBlock(Player player, Block block) {
+    public static boolean removeBlockedBlock(Player player, Block block) {
+        boolean lockedBefore = isBlocked(player, block);
         CompoundTag persistentData = player.getPersistentData();
         ListTag blockedList = persistentData.getList(BLOCKED_BOCKS_COLLECTION_NBT_KEY, Tag.TAG_STRING);
 
@@ -43,6 +46,7 @@ public class LockedBlockManager {
 
         persistentData.put(BLOCKED_BOCKS_COLLECTION_NBT_KEY, blockedList);
         BlockBlocker.LOGGER.info("Removed blocked block: " + blockKey + " for player " + player.getName().getString());
+        return lockedBefore;
     }
 
     /**
