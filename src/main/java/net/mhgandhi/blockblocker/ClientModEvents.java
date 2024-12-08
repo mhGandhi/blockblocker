@@ -1,15 +1,8 @@
 package net.mhgandhi.blockblocker;
 
-import com.mojang.brigadier.CommandDispatcher;
-import net.mhgandhi.blockblocker.commands.LockCommand;
-import net.minecraft.client.Minecraft;
-import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
@@ -69,7 +62,7 @@ public class ClientModEvents {
 
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event){
-        new LockCommand(event.getDispatcher(), event.getBuildContext());
+        new BlockBlockerCommand(event.getDispatcher(), event.getBuildContext());
 
         ConfigCommand.register(event.getDispatcher());
     }

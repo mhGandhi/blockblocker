@@ -1,37 +1,26 @@
-package net.mhgandhi.blockblocker.commands;
+package net.mhgandhi.blockblocker;
 
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.sun.jdi.connect.Connector;
-import net.mhgandhi.blockblocker.BlockBlocker;
-import net.mhgandhi.blockblocker.LockedBlockManager;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
 
-import java.io.PrintStream;
 import java.util.List;
 
-public class LockCommand {
-    public LockCommand(CommandDispatcher<CommandSourceStack> pDispatcher, CommandBuildContext buildContext){
+public class BlockBlockerCommand {
+    public BlockBlockerCommand(CommandDispatcher<CommandSourceStack> pDispatcher, CommandBuildContext buildContext){
         pDispatcher.register(
                 Commands.literal("blockblocker")
                         .then(Commands.literal("lock")
                                 .then(Commands.argument("block", BlockStateArgument.block(buildContext))
                                         .executes(this::lockBlock)))
-                        .then(Commands.literal("unlock")
+                        .then(Commands.literal("unlock")//todo only show locked blocks
                                 .then(Commands.argument("block", BlockStateArgument.block(buildContext))
                                         .executes(this::unlockBlock)))
                         .then(Commands.literal("list")
