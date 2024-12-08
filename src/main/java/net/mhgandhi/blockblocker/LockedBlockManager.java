@@ -9,6 +9,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class LockedBlockManager {
     public static final String BLOCKED_BOCKS_COLLECTION_NBT_KEY = "bb_lockedBlocks";
 
@@ -64,5 +67,11 @@ public class LockedBlockManager {
             persistentData.put(LockedBlockManager.BLOCKED_BOCKS_COLLECTION_NBT_KEY, new ListTag());
         }
         BlockBlocker.LOGGER.info("Synced persistent data for player " + pSp.getName().getString());
+    }
+
+    public static List<Tag> getLocked(Player pPlayer) {
+        CompoundTag persistentData = pPlayer.getPersistentData();
+        ListTag blockedList = persistentData.getList(BLOCKED_BOCKS_COLLECTION_NBT_KEY, Tag.TAG_STRING);
+        return blockedList.stream().toList();
     }
 }

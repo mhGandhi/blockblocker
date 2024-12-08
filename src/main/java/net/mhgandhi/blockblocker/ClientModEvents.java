@@ -1,6 +1,9 @@
 package net.mhgandhi.blockblocker;
 
+import com.mojang.brigadier.CommandDispatcher;
+import net.mhgandhi.blockblocker.commands.LockCommand;
 import net.minecraft.client.Minecraft;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -8,12 +11,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.server.command.ConfigCommand;
 
 // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
 @Mod.EventBusSubscriber(modid = BlockBlocker.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -60,5 +65,12 @@ public class ClientModEvents {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             LockedBlockManager.syncBlocked(serverPlayer);
         }
+    }
+
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event){
+        new LockCommand(event.getDispatcher(), event.getBuildContext());
+
+        ConfigCommand.register(event.getDispatcher());
     }
 }
