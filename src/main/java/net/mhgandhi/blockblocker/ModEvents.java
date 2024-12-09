@@ -35,7 +35,7 @@ public class ModEvents {
                 BlockBlocker.LOGGER.info("Blocked block placement: " + placedBlock.getDescriptionId() +
                         " by player " + player.getName().getString());
                 event.setCanceled(true);
-                player.displayClientMessage(Component.literal("NUH UH"), true);//todo translatable
+                player.displayClientMessage(Component.literal("This block is locked for you!"), true);//todo translatable
             }
         }
     }
