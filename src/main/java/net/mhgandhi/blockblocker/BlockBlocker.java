@@ -1,10 +1,9 @@
 package net.mhgandhi.blockblocker;
 
 import com.mojang.logging.LogUtils;
+import net.mhgandhi.blockblocker.network.ModNetworking;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -26,7 +25,8 @@ public class BlockBlocker
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
         // Register ourselves for server and other game events we are interested in
-        MinecraftForge.EVENT_BUS.register(new ClientModEvents());
+        MinecraftForge.EVENT_BUS.register(new ModEvents());
+
 
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
@@ -35,6 +35,7 @@ public class BlockBlocker
 
     private void commonSetup(final FMLCommonSetupEvent event)
     {
+        //todo ModNetworking.registerMessages();
         /*
         // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");

@@ -1,5 +1,6 @@
 package net.mhgandhi.blockblocker;
 
+import net.mhgandhi.blockblocker.network.LockedItemsSyncPacket;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -7,7 +8,10 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
+import net.mhgandhi.blockblocker.network.ModNetworking;
+import net.minecraftforge.network.PacketDistributor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class LockedBlockManager {
@@ -54,10 +58,12 @@ public class LockedBlockManager {
      */
     public static boolean isBlocked(Player player, Block block) {
         CompoundTag persistentData = player.getPersistentData();
+        System.out.println(persistentData);
         ListTag blockedList = persistentData.getList(BLOCKED_BOCKS_COLLECTION_NBT_KEY, Tag.TAG_STRING);
-
+        System.out.println("\ttesting for "+block.toString()+" in blockedList size "+ blockedList.size());
         String blockKey = block.toString();
         for (Tag element : blockedList) {
+            System.out.println();
             if (element.getAsString().equals(blockKey)) {
                 return true;
             }
@@ -77,5 +83,17 @@ public class LockedBlockManager {
         CompoundTag persistentData = pPlayer.getPersistentData();
         ListTag blockedList = persistentData.getList(BLOCKED_BOCKS_COLLECTION_NBT_KEY, Tag.TAG_STRING);
         return blockedList.stream().toList();
+    }
+
+    public static void sendLockedItemsToClient(ServerPlayer player) {
+        CompoundTag persistentData = player.getPersistentData();
+        ListTag lockedItemsTag = persistentData.getList("locked_items", Tag.TAG_STRING);
+
+        List<String> lockedItems = new ArrayList<>();
+        for (Tag itemTag : lockedItemsTag) {
+            lockedItems.add(itemTag.getAsString());
+        }
+
+        //todo ModNetworking.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new LockedItemsSyncPacket(lockedItems));
     }
 }
