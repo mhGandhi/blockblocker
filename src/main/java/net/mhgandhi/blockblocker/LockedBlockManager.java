@@ -17,9 +17,10 @@ public class LockedBlockManager {
     public static final String BLOCKED_BOCKS_COLLECTION_NBT_KEY = "bb_lockedBlocks";
 
     /**
-     * Adds a block to the player's restricted collection.
-     *
-     * @return
+     * locks a block
+     * @param player player to lock the block for
+     * @param block block to lock
+     * @return whether the operation resulted in any changes
      */
     public static boolean addBlockedBlock(Player player, Block block) {
         boolean unlockedBefore = !isBlocked(player,block);
@@ -34,12 +35,16 @@ public class LockedBlockManager {
             BlockBlocker.LOGGER.info("Added blocked block: " + blockKey + " for player " + player.getName().getString());
         }
 
-        sendLockedBlocksToClient((ServerPlayer) player);
+        if(unlockedBefore)
+            sendLockedBlocksToClient((ServerPlayer) player);
         return unlockedBefore;
     }
 
     /**
-     * Removes a block from the player's restricted collection.
+     * unlocks a block
+     * @param player player to unlock the block for
+     * @param block block to unlock
+     * @return whether the operation resulted in any changes
      */
     public static boolean removeBlockedBlock(Player player, Block block) {
         boolean lockedBefore = isBlocked(player, block);
@@ -52,12 +57,16 @@ public class LockedBlockManager {
         persistentData.put(BLOCKED_BOCKS_COLLECTION_NBT_KEY, blockedList);
         BlockBlocker.LOGGER.info("Removed blocked block: " + blockKey + " for player " + player.getName().getString());
 
-        sendLockedBlocksToClient((ServerPlayer) player);
+        if(lockedBefore)
+            sendLockedBlocksToClient((ServerPlayer) player);
         return lockedBefore;
     }
 
     /**
-     * Checks if a block is restricted for the player.
+     * check if block is locked
+     * @param player player to test whether the block is locked for
+     * @param block block to test whether it is locked
+     * @return whether @block is locked for @player
      */
     public static boolean isBlocked(Player player, Block block) {
         CompoundTag persistentData = player.getPersistentData();
@@ -73,21 +82,35 @@ public class LockedBlockManager {
         return false;
     }
 
+    /**
+     * sync locked blocks to player and create persistent data tag if it doesn't exist
+     * @param pSp player to sync
+     */
     public static void syncBlocked(ServerPlayer pSp){
         CompoundTag persistentData = pSp.getPersistentData();
         if (!persistentData.contains(LockedBlockManager.BLOCKED_BOCKS_COLLECTION_NBT_KEY)) {
+            //todo default locked config over extra class
             persistentData.put(LockedBlockManager.BLOCKED_BOCKS_COLLECTION_NBT_KEY, new ListTag());
         }
         sendLockedBlocksToClient(pSp);
         BlockBlocker.LOGGER.info("Synced persistent block locks for player " + pSp.getName().getString());
     }
 
+    /**
+     * get a list of NBT tags containing the locked blocks
+     * @param pPlayer player to get the locked blocks for
+     * @return list of nbt tags describing the blocks
+     */
     public static List<Tag> getLocked(Player pPlayer) {
         CompoundTag persistentData = pPlayer.getPersistentData();
         ListTag blockedList = persistentData.getList(BLOCKED_BOCKS_COLLECTION_NBT_KEY, Tag.TAG_STRING);
         return blockedList.stream().toList();
     }
 
+    /**
+     * update the locked blocks list for the client
+     * @param player player to update for
+     */
     public static void sendLockedBlocksToClient(ServerPlayer player) {
         CompoundTag persistentData = player.getPersistentData();
         ListTag lockedItemsTag = persistentData.getList(BLOCKED_BOCKS_COLLECTION_NBT_KEY, Tag.TAG_STRING);
