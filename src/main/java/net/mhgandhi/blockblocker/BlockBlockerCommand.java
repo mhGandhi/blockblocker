@@ -5,10 +5,12 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 
@@ -18,18 +20,27 @@ public class BlockBlockerCommand {
     public BlockBlockerCommand(CommandDispatcher<CommandSourceStack> pDispatcher, CommandBuildContext buildContext){
         pDispatcher.register(
                 Commands.literal("blockblocker")
-
-                        .then(Commands.literal("lock")
-                                .then(Commands.argument("block", BlockStateArgument.block(buildContext))
-                                        .executes(this::lockBlock)))
-                        .then(Commands.literal("unlock")//todo only show locked blocks
-                                .then(Commands.argument("block", BlockStateArgument.block(buildContext))
-                                        .executes(this::unlockBlock)))
                         .then(Commands.literal("list")
-                                .executes(this::listLockedBlocks))
+                                .executes(this::listLockedBlocks)
+                                .then(Commands.argument("target", EntityArgument.player())
+                                    .executes(this::listLockedBlocks)))
                         .then(Commands.literal("sync")
-                                .executes(this::syncLock))
-        );
+                                .executes(this::syncLock)
+                                .then(Commands.argument("target", EntityArgument.player())
+                                    .executes(this::syncLock)))
+
+                        .requires(source->source.hasPermission(4))
+                            .then(Commands.literal("lock")
+                                    .then(Commands.argument("block", BlockStateArgument.block(buildContext))
+                                            .executes(this::lockBlock)
+                                            .then(Commands.argument("target", EntityArgument.player())
+                                                .executes(this::lockBlock))))
+                            .then(Commands.literal("unlock")                        //todo only show locked blocks
+                                    .then(Commands.argument("block", BlockStateArgument.block(buildContext))
+                                            .executes(this::unlockBlock)
+                                            .then(Commands.argument("target", EntityArgument.player())
+                                                .executes(this::unlockBlock))))
+                        );
     }
 
     private int syncLock(CommandContext<CommandSourceStack> pContext) {
@@ -76,7 +87,7 @@ public class BlockBlockerCommand {
         if(player==null)return 0;
 
         if(!LockedBlockManager.addBlockedBlock(player, block)){
-            source.sendFailure(Component.literal(block.getName().getString()+ " is already locked"));
+            source.sendFailure(Component.literal(block.getName().getString()+ " is already locked"));//todo internationalize responses, add cases for using it on another player
             return 0;
         }
         source.sendSuccess(()->Component.literal("Locked Block: " + block.getName().getString()), true);
@@ -84,7 +95,14 @@ public class BlockBlockerCommand {
     }
 
     private static Player extractPlayerTarget(CommandContext<CommandSourceStack> pContext){
-        if(pContext.getSource().getEntity() instanceof Player p){
+        Entity ret;
+        try{
+            ret = EntityArgument.getPlayer(pContext,"target");
+        }catch(Exception e){
+            ret = pContext.getSource().getEntity();
+        }
+
+        if(ret instanceof Player p){
             return p;
         }else{
             pContext.getSource().sendFailure(Component.literal("This command can only be used on players."));
