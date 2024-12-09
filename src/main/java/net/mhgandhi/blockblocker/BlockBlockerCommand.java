@@ -8,6 +8,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.blocks.BlockStateArgument;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 
@@ -17,6 +18,8 @@ public class BlockBlockerCommand {
     public BlockBlockerCommand(CommandDispatcher<CommandSourceStack> pDispatcher, CommandBuildContext buildContext){
         pDispatcher.register(
                 Commands.literal("blockblocker")
+                        .then(Commands.literal("sync"))
+                        .executes(this::syncLock)
                         .then(Commands.literal("lock")
                                 .then(Commands.argument("block", BlockStateArgument.block(buildContext))
                                         .executes(this::lockBlock)))
@@ -26,6 +29,15 @@ public class BlockBlockerCommand {
                         .then(Commands.literal("list")
                                 .executes(this::listLockedBlocks))
         );
+    }
+
+    private int syncLock(CommandContext<CommandSourceStack> pContext) {
+        CommandSourceStack source = pContext.getSource();
+        Player player = extractPlayerTarget(pContext);
+        if(player==null)return 0;
+
+        LockedBlockManager.syncBlocked((ServerPlayer) player);
+        return 1;
     }
 
     private int listLockedBlocks(CommandContext<CommandSourceStack> pContext) {

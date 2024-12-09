@@ -1,6 +1,7 @@
 package net.mhgandhi.blockblocker;
 
-import net.mhgandhi.blockblocker.network.LockedItemsSyncPacket;
+import net.mhgandhi.blockblocker.network.LockedBlocksSyncPacket;
+import net.mhgandhi.blockblocker.network.ModNetworking;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -8,8 +9,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
-import net.mhgandhi.blockblocker.network.ModNetworking;
-import net.minecraftforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +33,8 @@ public class LockedBlockManager {
             persistentData.put(BLOCKED_BOCKS_COLLECTION_NBT_KEY, blockedList);
             BlockBlocker.LOGGER.info("Added blocked block: " + blockKey + " for player " + player.getName().getString());
         }
+
+        sendLockedBlocksToClient((ServerPlayer) player);
         return unlockedBefore;
     }
 
@@ -50,6 +51,8 @@ public class LockedBlockManager {
 
         persistentData.put(BLOCKED_BOCKS_COLLECTION_NBT_KEY, blockedList);
         BlockBlocker.LOGGER.info("Removed blocked block: " + blockKey + " for player " + player.getName().getString());
+
+        sendLockedBlocksToClient((ServerPlayer) player);
         return lockedBefore;
     }
 
@@ -76,7 +79,8 @@ public class LockedBlockManager {
         if (!persistentData.contains(LockedBlockManager.BLOCKED_BOCKS_COLLECTION_NBT_KEY)) {
             persistentData.put(LockedBlockManager.BLOCKED_BOCKS_COLLECTION_NBT_KEY, new ListTag());
         }
-        BlockBlocker.LOGGER.info("Synced persistent data for player " + pSp.getName().getString());
+        sendLockedBlocksToClient(pSp);
+        BlockBlocker.LOGGER.info("Synced persistent block locks for player " + pSp.getName().getString());
     }
 
     public static List<Tag> getLocked(Player pPlayer) {
@@ -85,15 +89,17 @@ public class LockedBlockManager {
         return blockedList.stream().toList();
     }
 
-    public static void sendLockedItemsToClient(ServerPlayer player) {
+    public static void sendLockedBlocksToClient(ServerPlayer player) {
         CompoundTag persistentData = player.getPersistentData();
         ListTag lockedItemsTag = persistentData.getList("locked_items", Tag.TAG_STRING);
+        System.err.println("ABCDEF try converting to string list "+lockedItemsTag+" size "+lockedItemsTag.size());
 
         List<String> lockedItems = new ArrayList<>();
         for (Tag itemTag : lockedItemsTag) {
             lockedItems.add(itemTag.getAsString());
         }
 
-        //todo ModNetworking.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new LockedItemsSyncPacket(lockedItems));
+        System.err.println("ABCDEF try sending msg "+lockedItems+" size "+lockedItems.size());
+        ModNetworking.sendToPlayer(new LockedBlocksSyncPacket(lockedItems), player);
     }
 }
