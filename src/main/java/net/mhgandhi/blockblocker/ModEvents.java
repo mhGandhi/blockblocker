@@ -1,16 +1,21 @@
 package net.mhgandhi.blockblocker;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -30,12 +35,31 @@ public class ModEvents {
                 BlockBlocker.LOGGER.info("Blocked block placement: " + placedBlock.getDescriptionId() +
                         " by player " + player.getName().getString());
                 event.setCanceled(true);
+                player.displayClientMessage(Component.literal("NUH UH"), true);//todo translatable
             }
         }
     }
 
     /**
-     * intercepts tooltip display
+     * intercept placing on ClientSide
+     */
+    @SubscribeEvent
+    public void onPlayerPlaceBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (event.getLevel().isClientSide()) {
+            if(event.getEntity() instanceof LocalPlayer player){
+                if (player.getMainHandItem().getItem() instanceof BlockItem blockItem) {
+                    Block block = blockItem.getBlock();
+
+                    if (LockedBlockManager.isBlocked(player, block)) {
+                        event.setCanceled(true);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * intercepts tooltip display ClientSide
      */
     @SubscribeEvent
     public void onItemTooltip(ItemTooltipEvent event){
