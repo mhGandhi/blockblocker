@@ -88,6 +88,7 @@ public class ModEvents {
         if(itemStack.getItem() instanceof BlockItem blockItem){
             if (LockedBlockManager.isBlocked(player, blockItem.getBlock())){
                 event.getToolTip().add(Component.literal("LOCKED"));
+                System.err.println(blockItem.getBlock().toString()+" is BLOCKED");
             }
         }
     }

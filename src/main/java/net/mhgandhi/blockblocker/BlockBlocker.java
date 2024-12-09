@@ -26,7 +26,7 @@ public class BlockBlocker
         modEventBus.addListener(this::commonSetup);
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(new ModEvents());
-
+        ModNetworking.registerMessages();
 
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
@@ -35,7 +35,7 @@ public class BlockBlocker
 
     private void commonSetup(final FMLCommonSetupEvent event)
     {
-        //todo ModNetworking.registerMessages();
+
         /*
         // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");

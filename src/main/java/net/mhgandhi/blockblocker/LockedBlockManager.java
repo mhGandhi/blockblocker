@@ -61,12 +61,11 @@ public class LockedBlockManager {
      */
     public static boolean isBlocked(Player player, Block block) {
         CompoundTag persistentData = player.getPersistentData();
-        System.out.println(persistentData);
         ListTag blockedList = persistentData.getList(BLOCKED_BOCKS_COLLECTION_NBT_KEY, Tag.TAG_STRING);
-        System.out.println("\ttesting for "+block.toString()+" in blockedList size "+ blockedList.size());
+        //System.out.println("\ttesting for "+block.toString()+" in blockedList size "+ blockedList.size());
         String blockKey = block.toString();
         for (Tag element : blockedList) {
-            System.out.println();
+            //System.out.println(element.getAsString()+ " == "+blockKey);
             if (element.getAsString().equals(blockKey)) {
                 return true;
             }
@@ -91,15 +90,11 @@ public class LockedBlockManager {
 
     public static void sendLockedBlocksToClient(ServerPlayer player) {
         CompoundTag persistentData = player.getPersistentData();
-        ListTag lockedItemsTag = persistentData.getList("locked_items", Tag.TAG_STRING);
-        System.err.println("ABCDEF try converting to string list "+lockedItemsTag+" size "+lockedItemsTag.size());
-
+        ListTag lockedItemsTag = persistentData.getList(BLOCKED_BOCKS_COLLECTION_NBT_KEY, Tag.TAG_STRING);
         List<String> lockedItems = new ArrayList<>();
         for (Tag itemTag : lockedItemsTag) {
             lockedItems.add(itemTag.getAsString());
         }
-
-        System.err.println("ABCDEF try sending msg "+lockedItems+" size "+lockedItems.size());
         ModNetworking.sendToPlayer(new LockedBlocksSyncPacket(lockedItems), player);
     }
 }

@@ -18,8 +18,7 @@ public class BlockBlockerCommand {
     public BlockBlockerCommand(CommandDispatcher<CommandSourceStack> pDispatcher, CommandBuildContext buildContext){
         pDispatcher.register(
                 Commands.literal("blockblocker")
-                        .then(Commands.literal("sync"))
-                        .executes(this::syncLock)
+
                         .then(Commands.literal("lock")
                                 .then(Commands.argument("block", BlockStateArgument.block(buildContext))
                                         .executes(this::lockBlock)))
@@ -28,6 +27,8 @@ public class BlockBlockerCommand {
                                         .executes(this::unlockBlock)))
                         .then(Commands.literal("list")
                                 .executes(this::listLockedBlocks))
+                        .then(Commands.literal("sync")
+                                .executes(this::syncLock))
         );
     }
 
