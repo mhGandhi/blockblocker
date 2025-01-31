@@ -4,10 +4,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.stats.Stats;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -20,6 +24,8 @@ import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.server.command.ConfigCommand;
+
+import java.util.UUID;
 
 @Mod.EventBusSubscriber(modid = BlockBlocker.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ModEvents {
@@ -75,10 +81,18 @@ public class ModEvents {
 
     /**
      * makes sure everything is in order when a player logs in
+     * applies default locked blocks for new players
      */
     @SubscribeEvent
     public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
+            int playTime = serverPlayer.getStats().getValue(Stats.CUSTOM.get(Stats.PLAY_TIME));
+            if (playTime == 0) {
+                BlockBlocker.LOGGER.info(serverPlayer.getName().getString()+" joined for the first time; locking default blocks.");
+                for (Block block : Config.defaultLockedBlocks) {
+                    LockedBlockManager.addBlockedBlock(serverPlayer, block);
+                }
+            }
             LockedBlockManager.syncBlocked(serverPlayer);
         }
     }
