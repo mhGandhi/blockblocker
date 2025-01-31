@@ -27,14 +27,16 @@ public class LockedBlocksSyncPacket {
     }
 
     public void handle(CustomPayloadEvent.Context pContext) {
-        Player player = Minecraft.getInstance().player;
-        if (player != null) {
-            CompoundTag data = player.getPersistentData();
-            ListTag lockedItemsTag = new ListTag();
-            for (String itemKey : lockedItems) {
-                lockedItemsTag.add(StringTag.valueOf(itemKey));
+        if(pContext.isClientSide()){
+            Player player = Minecraft.getInstance().player;//Vorsicht vor getInstance auf server
+            if (player != null) {
+                CompoundTag data = player.getPersistentData();
+                ListTag lockedItemsTag = new ListTag();
+                for (String itemKey : lockedItems) {
+                    lockedItemsTag.add(StringTag.valueOf(itemKey));
+                }
+                data.put(LockedBlockManager.BLOCKED_BOCKS_COLLECTION_NBT_KEY, lockedItemsTag);
             }
-            data.put(LockedBlockManager.BLOCKED_BOCKS_COLLECTION_NBT_KEY, lockedItemsTag);
         }
         pContext.setPacketHandled(true);
 
